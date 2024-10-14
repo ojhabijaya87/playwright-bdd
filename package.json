@@ -9,7 +9,9 @@
     "report": "npx http-server ./cucumber-report -o index.html",
     "test:dev": "cross-env NODE_ENV=dev npx bddgen && playwright test --ui",
     "test:qa": "cross-env NODE_ENV=qa npx bddgen && playwright test --ui",
-    "test:prod": "cross-env NODE_ENV=prod npx bddgen && playwright test --ui"
+    "test:prod": "cross-env NODE_ENV=prod npx bddgen && playwright test --ui",
+    "lint": "eslint . --ext .js,.ts",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "@playwright/test": "1.47.2",

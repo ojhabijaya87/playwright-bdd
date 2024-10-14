@@ -29,10 +29,16 @@ Example project that uses [playwright-bdd](https://github.com/vitalets/playwrigh
    npx playwright install
    ```
 
-6. Run tests
+6. Run tests in different environments
 
    ```
-   npm test
+   npm run test:dev
+   ```
+    ```
+   npm run test:qa
+   ```
+    ```
+   npm run test:prod
    ```
 
    Output:
