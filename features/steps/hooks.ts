@@ -23,11 +23,12 @@ export const { Given, When, Then, Before, After, BeforeAll, AfterAll } =
   createBdd(test);
 
 // Use environment variables
-const baseURL = process.env.BASE_URL || "";
-const browserType = process.env.BROWSER || "chromium"; // Default to Chromium
-const headless = process.env.HEAD === "true"; // Check if headless mode is required
+export const baseURL = process.env.BASE_URL || "";
+export const apiURL = process.env.API_URL || "";
+export const browserType = process.env.BROWSER || "chromium"; // Default to Chromium
+export const headless = process.env.HEAD === "true"; // Check if headless mode is required
 
-Before(async function () {
+Before({ tags: "@web", timeout: 60000 }, async function () {
   await pageManager.getBasePage().navigate(baseURL);
 });
 

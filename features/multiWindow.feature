@@ -1,3 +1,4 @@
+@web
 Feature: Multi-Window Switching
 
     Scenario: User switches back to the original window from a new window
