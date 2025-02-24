@@ -1,8 +1,7 @@
-// pages/SearchPage.ts
 import { Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
-// SearchPage class that extends locators specific to the search page elements
+
 export class AddContactPage extends BasePage {
   constructor(page: Page) {
     super(page);

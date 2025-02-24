@@ -19,6 +19,6 @@ jobs:
         with:
           name: playwright-artifacts
           path: |
-            playwright-report/
+            cucumber-report/
             test-results/
           retention-days: 10

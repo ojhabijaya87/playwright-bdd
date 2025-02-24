@@ -10,7 +10,6 @@ let authResponse: AuthResponse;
 let addNewContact: AddContactDTO;
 let newContactResponse: ContactResponseDTO;
 
-// User Login
 Given("a registered user logs in via API", async ({ apiContext, user }) => {
   const response = await apiContext.sendRequest(
     "POST",
@@ -27,7 +26,6 @@ Given("a registered user logs in via API", async ({ apiContext, user }) => {
   apiContext.setAuthToken(authResponse.token);
 });
 
-// User Registration
 Given("the user has the valid data to register", async ({ user }) => {
   userData = {
     firstName: user.firstName,
@@ -50,7 +48,6 @@ Then(
   }
 );
 
-// Token Validation
 Then(
   "the API should return a valid authentication token",
   async ({ apiContext }) => {
@@ -60,7 +57,6 @@ Then(
   }
 );
 
-// Contact Creation
 Given(
   "the user has valid data to create a new contact",
   async ({ newContact }) => {

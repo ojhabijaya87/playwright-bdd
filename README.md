@@ -1,4 +1,5 @@
 # Playwright BDD Automation Framework
+
 ## Overview
 
 This project is an automated testing framework using Playwright with BDD (Behavior-Driven Development) approach. It supports both UI and API testing, utilizing TypeScript for robust type checking and improved developer experience.
@@ -35,12 +36,13 @@ Before setting up and running the tests, ensure you have the following:
 Clone the project repository from GitHub:
 
 ```bash
-git clone https://github.com/wtw-ict-recruitment/BKO_05112024.git
+git clone https://github.com/ojhabijaya87/playwright-bdd.git
 ```
 
 ```bash
-cd BKO_05112024
+cd cd playwright-bdd
 ```
+
 ### 2. Install Dependencies
 
 Navigate to the project directory and install all dependencies:
@@ -68,12 +70,14 @@ Configure the environment files under the `env` directory:
 - `.env.prod` for the production environment
 
   ```bash
-  BASE_URL=https://www.wtwco.com/ICT
-  BROWSERS=chromium,firefox
+  BASE_URL= https://thinking-tester-contact-list.herokuapp.com/
+  API_URL= https://thinking-tester-contact-list.herokuapp.com
+  BROWSERS= chromium
   ```
 
-- `BASE_URL`: Sets the base URL for your tests.
-- `BROWSERS`: Defines the browsers to be used for multi-browser testing (comma-separated, e.g., chromium,firefox,webkit). The framework is currently set to run with `chromium` and `firefox`.
+- `BASE_URL`: Sets the base URL for UI tests.
+- `API_URL`: Sets the base URL for API tests.
+- `BROWSERS`: Defines the browsers to be used for multi-browser testing (comma-separated, e.g., chromium,firefox,webkit). The framework is currently set to run with `chromium`.
 
 ## Configuration
 
@@ -86,46 +90,36 @@ The primary configurations are set in:
 
 To execute tests, use the following commands:
 
-- `npm run test`: Runs all tests in default headless mode.
-- `npm run test:ui`: Opens Playwright's interactive UI for individual test execution.
-- `npm run test:headed`: Runs tests in headed mode to visually monitor test execution.
-- `npm run test:report`: Shows a generated test report post-execution.
-- `npm run test:parallel`: Executes tests in parallel with 5 workers.
-- `npm run test:env:qa`: Runs tests with QA-specific configurations.
-- `npm run test:env:dev`: Runs tests with Development configurations.
-- `npm run test:env:prod`: Runs tests with Production configurations.
-- `npm run test:multi-browser`: Executes tests across multiple browsers for cross-browser validation.
-
+- `npm run test`: Generates BDD tests and runs all Playwright tests in default headless mode.
+- `npm run report`: Serves the cucumber report using http-server and opens it in the default browser.
+- `npm run test:dev`: Runs tests in development environment using Playwright's UI mode.
+- `npm run test:qa`: Runs tests in QA environment using Playwright's UI mode.
+- `npm run test:api:qa`: Runs API tests in QA environment (tests marked with @api tag).
+- `npm run test:prod`: Runs tests in production environment using Playwright's UI mode.
 
 ## Design Choices, Tools, and Challenges
 
 ### Design Choices and Tools
 
-1. **Playwright with BDD**: Playwright-BDD was chosen over traditional Cucumber integration. This decision allows leveraging Playwright's powerful features while maintaining a BDD approach. It simplifies setup, improves performance, and provides better integration with Playwright's native capabilities.
+1. **Playwright**: Chosen for its cross-browser support, parallel execution, and advanced debugging tools.
 
-2. **TypeScript**: TypeScript is used for its strong typing system, which helps catch errors early and improves code maintainability.
+2. **BDD (Playwright-BDD)**: Simplifies the setup and leverages Playwright’s strengths while following a clear Gherkin-based structure.
 
-3. **Page Object Model (POM)**: Implemented to encapsulate page-specific elements and actions, promoting reusability and easier maintenance.
+3. **TypeScript**: TypeScript is used for its strong typing system, which helps catch errors early and improves code maintainability.
 
-4. **Custom API Client**: A custom APITestContext class was built for handling API requests, making API tests more robust and easier to manage.
+4. **Page Object Model (POM)**: Implemented to encapsulate page-specific elements and actions, promoting reusability and easier maintenance.
 
-5. **Data Generation**: Faker was integrated for dynamic test data generation, allowing for more diverse and realistic test scenarios.
+5. **Fixture-Based Test Setup**: The test setup extends Playwright's test.extend() to provide reusable fixtures.
 
-6. **Environment Management**: Support for multiple environments (dev, qa, prod) was implemented using dotenv, allowing easy switching between different configurations.
+6. **Custom API Client**: A custom APITestContext class was built for handling API requests, making API tests more robust and easier to manage.
 
-7. **Parallel Execution**: Tests are configured to run features in parallel while keeping scenarios within each feature sequential, optimizing test execution time.
+7. **Data Generation**: Faker was integrated for dynamic test data generation, allowing for more diverse and realistic test scenarios.
 
-8. **Reporting**: Cucumber HTML reporter is set up for detailed test results, viewable both locally and in CI/CD pipelines.
+8. **Environment Management**: Support for multiple environments (dev, qa, prod) was implemented using dotenv, allowing easy switching between different configurations.
 
-### Challenges Faced
+9. **Parallel Execution**: Tests are configured to run features in parallel while keeping scenarios within each feature sequential, optimizing test execution time.
 
-1. **Authentication State Management**: Initially, Playwright's storage state was considered for efficient login handling. However, due to the need to test user registration, a more flexible approach was adopted to accommodate all test scenarios.
-
-2. **Balancing Parallelization and Test Dependencies**: Achieving optimal test execution speed while ensuring that dependent tests don't interfere with each other was challenging. The solution of running features in parallel but scenarios sequentially addresses this.
-
-3. **Cross-browser Consistency**: Ensuring consistent behavior across different browsers required careful consideration in test design and implementation.
-
-4. **Dynamic Content Handling**: Dealing with lazy-loaded elements and dynamically changing content necessitated the implementation of robust waiting strategies.
+10. **Reporting**: Cucumber HTML reporter is set up for detailed test results, viewable both locally and in CI/CD pipelines.
 
 ### Design Patterns and Principles
 
@@ -136,15 +130,24 @@ To execute tests, use the following commands:
 3. **Command Pattern**: Employed in the custom API client for encapsulating and parameterizing API requests.
 
 4. **SOLID Principles**:
+
    - Single Responsibility Principle: Each class, like APITestContext, has a single, well-defined purpose.
    - Open/Closed Principle: The framework is designed to be easily extendable without modifying existing code.
    - Liskov Substitution Principle (LSP): Page objects follow inheritance correctly (e.g., AddContactPage extends BasePage). API request methods allow extending or modifying behavior without breaking existing functionality.
-   - Interface Segregation Principle (Partially Followed): Separate DTOs are correctly defined and page classes only expose relevant methods. However, the APITestContext class has multiple responsibilities. 
-    
+   - Interface Segregation Principle (Partially Followed): Separate DTOs are correctly defined and page classes only expose relevant methods. However, the APITestContext class has multiple responsibilities.
+
    - Dependency Inversion: Playwright's fixture-based system promotes dependency injection.
 
 5. **DRY (Don't Repeat Yourself)**: Implemented through the use of reusable components and utility functions.
 
 6. **KISS (Keep It Simple, Stupid)**: Maintained simplicity in design with clear and descriptive class and method names.
 
-7. **Composition over Inheritance**: Favored object composition for flexibility and avoiding deep inheritance hierarchies.
+### Challenges Faced
+
+1. **Authentication State Management**: Initially, Playwright's storage state was considered for efficient login handling. However, due to the need to test user registration, a more flexible approach was adopted to accommodate all test scenarios.
+
+2. **Balancing Parallelization and Test Dependencies**: Achieving optimal test execution speed while ensuring that dependent tests don't interfere with each other was challenging. The solution of running features in parallel but scenarios sequentially addresses this.
+
+3. **Cross-browser Consistency**: Ensuring consistent behavior across different browsers required careful consideration in test design and implementation.
+
+4. **Dynamic Content Handling**: Dealing with lazy-loaded elements and dynamically changing content necessitated the implementation of robust waiting strategies.

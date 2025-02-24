@@ -3,16 +3,11 @@
   "version": "0.1.0",
   "scripts": {
     "test": "npx bddgen && npx playwright test",
-    "watch:bdd": "nodemon -w ./features -w ./steps -e feature,js,ts --exec \"npx bddgen\"",
-    "watch:pw": "npx bddgen && playwright test --ui",
-    "watch": "run-p watch:*",
     "report": "npx http-server ./cucumber-report -o index.html",
     "test:dev": "cross-env NODE_ENV=dev npx bddgen && playwright test --ui",
     "test:qa": "cross-env NODE_ENV=qa npx bddgen && playwright test --ui",
     "test:api:qa": "cross-env NODE_ENV=qa npx bddgen && npx playwright test --grep @api ",
-    "test:prod": "cross-env NODE_ENV=prod npx bddgen && playwright test --ui",
-    "lint": "eslint . --ext .js,.ts",
-    "format": "prettier --write ."
+    "test:prod": "cross-env NODE_ENV=prod npx bddgen && playwright test --ui"
   },
   "devDependencies": {
     "@playwright/test": "1.47.2",
