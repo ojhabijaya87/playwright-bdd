@@ -40,7 +40,7 @@ git clone https://github.com/ojhabijaya87/playwright-bdd.git
 ```
 
 ```bash
-cd cd playwright-bdd
+cd playwright-bdd
 ```
 
 ### 2. Install Dependencies
