@@ -1,55 +1,99 @@
 import { expect } from "@playwright/test";
-import { Given, When, Then } from "./hooks";
-import { pageManager } from "../../supports/utilities/pageManager";
+import { When, Then, sharedUser } from "./hooks";
 
-
-Given(
-  /^the user navigates to the "([^"]*)" page$/,
-  async ({}, pageName: string) => {
-    // Adjusted to include fixtures as first parameter
-    console.log(`Navigating to the "${pageName}" page`);
-    await pageManager.getHomePage().clickLink(pageName);
-  }
-);
-
-// And the user opens a new window by clicking on "Click Here"
 When(
-  /^the user opens a new window by clicking on "([^"]*)"$/,
-  async ({}, linkText: string) => {
-    // Adjusted to include fixtures as first parameter
-    console.log(`Opening a new window by clicking on "${linkText}"`);
-    await pageManager.getMultiWindowPage().openNewWindow(linkText);
+  /^the user clicks on the "Sign Up" button from the login page$/,
+  async ({ loginPage }) => {
+    await loginPage.signUp();
   }
 );
 
-When(/^the user switches to the new window$/, async () => {
-  console.log("Switching to the new window");
-  await pageManager.getMultiWindowPage().switchToNewWindow();
-});
-
-When(/^the user reads the content of the new window$/, async () => {
-  console.log("Reading content of the new window");
-  await pageManager.getMultiWindowPage().verifyNewWindowContent("New Window");
-});
-
-When(/^the user switches back to the original window$/, async () => {
-  console.log("Switching back to the original window");
-  await pageManager.getMultiWindowPage().switchBackToOriginalWindow();
-});
-
-Then(
-  /^the user should see the title "([^"]*)" in the original window$/,
-  async ({}, args1: string) => {
-    await pageManager.getMultiWindowPage().verifyOriginalWindowTitle(args1);
+When(
+  /^the user fills in the registration form with valid details$/,
+  async ({ registerPage, user }) => {
+    console.log(user.email);
+    console.log(user.password);
+    await registerPage.registerUser(user);
   }
 );
 
 Then(
-  /^the user should see the content of the original page unchanged$/,
-  async () => {
-    console.log("Verifying original window content remains unchanged");
-    await pageManager
-      .getMultiWindowPage()
-      .verifyOriginalWindowContent("Opening a new window");
+  /^the user should be redirected to the "Add User" page$/,
+  async ({ loginPage, page }) => {
+    await page.waitForLoadState();
+    await expect(page.url()).toContain("/addUser");
+  }
+);
+When(/^the user logout from the application$/, async ({ contactListPage }) => {
+  await contactListPage.logOut();
+});
+
+When(/^the user login to the application$/, async ({ loginPage }) => {
+  await loginPage.logIn(sharedUser.email, sharedUser.password);
+});
+
+Then(
+  /^the user should be redirected to the "Contact List" page$/,
+  async ({ page }) => {
+    await page.waitForURL("**/contactList");
+    await expect(page.url()).toContain("/contactList");
+  }
+);
+When(
+  /^the user clicks on "Add New Contact"$/,
+  async ({ contactListPage, user }) => {
+    await contactListPage.addNewContact();
+  }
+);
+
+When(
+  /^the user fills in the contact form with valid details$/,
+  async ({ addContactPage, newContact }) => {
+    await addContactPage.fillContactForm(newContact);
+  }
+);
+
+Then(
+  /^the new contact should be added to the contact list$/,
+  async ({ contactListPage, newContact }) => {
+    expect(await contactListPage.addedContact()).toContain(
+      newContact.firstName
+    );
+    expect(await contactListPage.addedContact()).toContain(newContact.lastName);
+  }
+);
+
+When(
+  /^the user selects a contact by name$/,
+  async ({ contactListPage, newContact }) => {
+    await contactListPage.clickContactByName(
+      newContact.firstName + " " + newContact.lastName
+    );
+  }
+);
+
+When(
+  /^the user updates the contact’s details$/,
+  async ({ editContactPage, updatedContact }) => {
+    await editContactPage.editContact(updatedContact);
+  }
+);
+
+When(
+  /^the user navigates back to the contact list$/,
+  async ({ editContactPage }) => {
+    await editContactPage.returnToContactListPage();
+  }
+);
+
+Then(
+  /^the updated contact details should be visible in the contact list$/,
+  async ({ contactListPage, updatedContact }) => {
+    expect(await contactListPage.addedContact()).toContain(
+      updatedContact.firstName
+    );
+    expect(await contactListPage.addedContact()).toContain(
+      updatedContact.lastName
+    );
   }
 );

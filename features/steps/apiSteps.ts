@@ -1,148 +1,125 @@
-import { APIResponse, expect, request } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Given, When, Then, apiURL } from "./hooks";
-import { pageManager } from "../../supports/utilities/pageManager";
-import { Booking } from "../../supports/dtos/booking";
-import { BookingResponse } from "../../supports/dtos/bookingResponse";
-let token: string;
-let bookingData: Booking;
-let bookingId: number;
-let response: APIResponse;
+import { UserDTO } from "../../supports/dtos/user";
+import { AuthResponse } from "../../supports/dtos/authResponse";
+import { AddContactDTO } from "../../supports/dtos/addNewContact";
+import { ContactResponseDTO } from "../../supports/dtos/newContactResponse";
 
-When(/^I obtain an authorization token from the auth endpoint$/, async () => {
-  const response = await (
-    await request.newContext()
-  ).post(`${apiURL}/auth`, {
-    data: { username: "admin", password: "password123" },
-    headers: { "Content-Type": "application/json" },
-  });
-  expect(response.ok()).toBeTruthy();
-  const body = await response.json();
-  token = body.token;
+let userData: UserDTO;
+let authResponse: AuthResponse;
+let addNewContact: AddContactDTO;
+let newContactResponse: ContactResponseDTO;
+
+// User Login
+Given("a registered user logs in via API", async ({ apiContext, user }) => {
+  const response = await apiContext.sendRequest(
+    "POST",
+    apiURL + "/auth/login",
+    {
+      data: {
+        email: user.email,
+        password: user.password,
+      },
+    }
+  );
+  await apiContext.expectSuccessfulResponse();
+  authResponse = await apiContext.getResponseBody<AuthResponse>();
+  apiContext.setAuthToken(authResponse.token);
 });
 
+// User Registration
+Given("the user has the valid data to register", async ({ user }) => {
+  userData = {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    password: user.password,
+  };
+});
+
+When("the user registers using API", async ({ apiContext }) => {
+  await apiContext.sendRequest("POST", "/users", {
+    data: userData,
+  });
+});
+
+Then(
+  "the user should return {int} status code",
+  async ({ apiContext }, statusCode: number) => {
+    expect(apiContext.getResponseStatus()).toBe(statusCode);
+  }
+);
+
+// Token Validation
+Then(
+  "the API should return a valid authentication token",
+  async ({ apiContext }) => {
+    authResponse = await apiContext.getResponseBody<AuthResponse>();
+    expect(authResponse.token).toBeDefined();
+    expect(authResponse.token).not.toBeNull();
+  }
+);
+
+// Contact Creation
 Given(
-  /^I have a new booking with firstname "([^"]*)", lastname "([^"]*)", totalprice "([^"]*)", depositpaid "([^"]*)", checkin "([^"]*)", checkout "([^"]*)"$/,
-  async (
-    {},
-    firstname: string,
-    lastname: string,
-    totalprice: string,
-    depositpaid: string,
-    checkin: string,
-    checkout: string
-  ) => {
-    bookingData = {
-      firstname,
-      lastname,
-      totalprice: parseInt(totalprice, 10), // Convert to integer
-      depositpaid: depositpaid.toLowerCase() === "true", // Convert string to boolean
-      bookingdates: { checkin, checkout },
+  "the user has valid data to create a new contact",
+  async ({ newContact }) => {
+    addNewContact = {
+      firstName: newContact.firstName,
+      lastName: newContact.lastName,
     };
   }
 );
 
-When(/^I send a POST request to the booking endpoint$/, async ({}) => {
-  response = await (
-    await request.newContext()
-  ).post(`${apiURL}/booking`, {
-    data: bookingData,
-    headers: { "Content-Type": "application/json" },
-  });
-});
-
-Then(/^I should receive a 200 status code for the POST request$/, () => {
-  expect(response.status()).toBe(200);
-});
-
-Then(/^the response body should include the booking data$/, async () => {
-  const responseBody: BookingResponse = await response.json();
-  bookingId = responseBody.bookingid;
-  // Validate the response matches the request data
-  expect(responseBody.booking.firstname).toBe(bookingData.firstname);
-  expect(responseBody.booking.lastname).toBe(bookingData.lastname);
-  expect(responseBody.booking.totalprice).toBe(bookingData.totalprice);
-  expect(responseBody.booking.depositpaid).toBe(bookingData.depositpaid);
-});
-
-When(/^I send a GET request with the created booking ID$/, async () => {
-  response = await (
-    await request.newContext()
-  ).get(`${apiURL}/booking/${bookingId}`);
-  console.log(response.status());
-});
-
-Then(/^I should receive a 200 status code for the GET request$/, () => {
-  expect(response.status()).toBe(200);
-});
-
-Then(
-  /^the response body should include the booking data for get request$/,
-  async () => {
-    const responseBody: Booking = await response.json();
-
-    // Validate the response matches the created booking data
-    expect(responseBody.firstname).toBe(bookingData.firstname);
-    expect(responseBody.lastname).toBe(bookingData.lastname);
-  }
-);
-
-Given(
-  /^I have updated booking data with firstname "([^"]*)" and lastname "([^"]*)"$/,
-  async ({}, firstname: string, lastname: string) => {
-    bookingData.firstname = firstname;
-    bookingData.lastname = lastname;
-  }
-);
-
 When(
-  /^I send a PUT request to the booking endpoint with updated firstname "([^"]*)" and lastname "([^"]*)"$/,
-  async ({}, firstname: string, lastname: string) => {
-    response = await (
-      await request.newContext()
-    ).put(`${apiURL}/booking/${bookingId}`, {
-      data: { ...bookingData, firstname, lastname },
+  "the user sends a request to create a new contact with valid data",
+  async ({ apiContext }) => {
+    await apiContext.sendRequest("POST", "/contacts", {
+      data: addNewContact,
       headers: {
-        "Content-Type": "application/json",
-        Cookie: `token=${token}`,
+        Authorization: `Bearer ${authResponse.token}`,
       },
     });
   }
 );
 
-Then(/^I should receive a 200 status code for the PUT request$/, () => {
-  expect(response.status()).toBe(200);
+Then("the contact should be successfully created", async ({ apiContext }) => {
+  newContactResponse = await apiContext.getResponseBody<ContactResponseDTO>();
+  expect(newContactResponse._id).not.toBeNull();
 });
 
+// Retrieve Contact
 Then(
-  /^the response body should include the updated booking data$/,
-  async () => {
-    const responseBody: Booking = await response.json();
-
-    expect(responseBody.firstname).toBe(bookingData.firstname);
-    expect(responseBody.lastname).toBe(bookingData.lastname);
+  "the contact should be retrievable via the API",
+  async ({ apiContext }) => {
+    await apiContext.sendRequest("GET", `/contacts/${newContactResponse._id}`, {
+      headers: { Authorization: `Bearer ${authResponse.token}` },
+    });
+    await apiContext.expectSuccessfulResponse();
   }
 );
 
-When(/^I send a DELETE request to the booking endpoint$/, async () => {
-  response = await (
-    await request.newContext()
-  ).delete(`${apiURL}/booking/${bookingId}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: `token=${token}`,
-    },
-  });
-});
+// Delete Contact
+When(
+  "the user sends a request to delete the contact",
+  async ({ apiContext }) => {
+    await apiContext.sendRequest(
+      "DELETE",
+      `/contacts/${newContactResponse._id}`,
+      {
+        headers: { Authorization: `Bearer ${authResponse.token}` },
+      }
+    );
+  }
+);
 
+// Verify Contact Deletion
 Then(
-  /^I should receive a 201 status code for the DELETE request$/,
-  async () => {
-    expect(response.status()).toBe(201);
-
-    // Confirm the deletion by attempting to retrieve the deleted booking
-    const getResponse = await (
-      await request.newContext()
-    ).get(`${apiURL}/booking/${bookingId}`);
-    expect(getResponse.status()).toBe(404);
+  "the contact should not be retrievable via the API",
+  async ({ apiContext }) => {
+    await apiContext.sendRequest("GET", `/contacts/${newContactResponse._id}`, {
+      headers: { Authorization: `Bearer ${authResponse.token}` },
+    });
+    expect(apiContext.getResponseStatus()).toBe(404);
   }
 );

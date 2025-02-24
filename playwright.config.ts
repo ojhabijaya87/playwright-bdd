@@ -8,17 +8,22 @@ const testDir = defineBddConfig({
 
 export default defineConfig({
   testDir,
+  fullyParallel: false,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 4 : 4, // Run multiple specs in parallel
   reporter: [
+    ["line"], // Add a console line reporter for immediate output
     cucumberReporter("html", {
       outputFile: "cucumber-report/index.html",
       externalAttachments: true,
-      attachmentsBaseURL: "http://127.0.0.1:8080/data",
+      attachmentsBaseURL: "http://127.0.0.1:8080/data", // Ensure this server is accessible
     }),
   ],
   use: {
     screenshot: "on",
     video: "on",
     trace: "on",
+    // storageState: 'auth.json',
   },
   projects: [
     {
